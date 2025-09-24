@@ -6,6 +6,8 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  [functions.esbuild]
+    loader = { ".js" = "jsx" }
 
 # Redirect API calls to serverless functions
 [[redirects]]
