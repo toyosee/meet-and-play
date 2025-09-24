@@ -1,7 +1,6 @@
 [build]
-  # Netlify is already in the 'frontend' directory, so we just run the build.
-  command = "npm run build"
-  # The 'dist' directory is created inside 'frontend', which is the base directory.
+  # Install the function's dependencies first, then build the frontend.
+  command = "npm install --prefix ../netlify/functions && npm run build"
   publish = "dist"
 
 # Enable Netlify Functions
