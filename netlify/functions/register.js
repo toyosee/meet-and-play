@@ -1,51 +1,49 @@
 const nodemailer = require("nodemailer");
 const QRCode = require("qrcode");
-const { createCanvas, loadImage } = require("canvas"); // <-- Import createCanvas and loadImage
 
-// Generate attendance code
+// Generate a unique attendance code
 function generateCode() {
   return "BTVRSEGAME-" + Math.random().toString(36).substr(2, 6).toUpperCase();
 }
 
-// Generate image as a buffer
-async function generateTicketImage(ticketData, qrDataUrl) {
-  const width = 800;
-  const height = 1000;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext("2d");
+/**
+ * Generates an HTML string for the ticket.
+ * @param {object} ticketData - The user and ticket information.
+ * @param {string} qrDataUrl - The base64 data URL of the QR code image.
+ * @returns {string} The complete HTML string for the email body.
+ */
+function generateTicketHtml(ticketData, qrDataUrl) {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+      <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #ddd;">
+        <h1 style="color: #333;">Barterverse Meet And Play Ticket</h1>
+      </div>
 
-  // Fill with a background color (e.g., white)
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0, 0, width, height);
+      <div style="padding: 20px;">
+        <p style="font-size: 16px;"><strong>Name:</strong> ${ticketData.name}</p>
+        <p style="font-size: 16px;"><strong>Email:</strong> ${ticketData.email}</p>
+        <p style="font-size: 16px;"><strong>Game Type:</strong> ${ticketData.gameType}</p>
+        <p style="font-size: 16px;"><strong>Attendance Code:</strong> ${ticketData.code}</p>
+      </div>
 
-  // Set font properties and draw text
-  ctx.fillStyle = "#000";
-  ctx.font = '24px "Arial"';
-  ctx.textAlign = "center";
-  ctx.fillText("Barterverse Meet And Play Ticket", width / 2, 50);
+      <div style="text-align: center; padding: 20px;">
+        <p style="font-weight: bold;">Present this code for entry:</p>
+        <img src="${qrDataUrl}" alt="QR Code" style="width: 200px; height: 200px; border: 2px solid #000;"/>
+      </div>
 
-  ctx.textAlign = "left";
-  ctx.font = '20px "Arial"';
-  ctx.fillText(`Name: ${ticketData.name}`, 50, 150);
-  ctx.fillText(`Email: ${ticketData.email}`, 50, 180);
-  ctx.fillText(`Game Type: ${ticketData.gameType}`, 50, 210);
-  ctx.fillText(`Attendance Code: ${ticketData.code}`, 50, 240);
-  
-  // Draw QR code image
-  const qrImage = await loadImage(qrDataUrl);
-  ctx.drawImage(qrImage, width / 2 - 100, 300, 200, 200);
-
-  ctx.font = '16px "Arial"';
-  ctx.textAlign = "center";
-  ctx.fillStyle = "red";
-  ctx.fillText("This ticket is valid for ONE DAY only and is NON-TRANSFERABLE.", width / 2, 600);
-
-  ctx.fillStyle = "black";
-  ctx.fillText("For support, contact Barterverse:", width / 2, 650);
-  ctx.fillText("tyabolaji@gmail.com | +2348069213941", width / 2, 680);
-
-  // Return the image as a buffer
-  return canvas.toBuffer("image/jpeg");
+      <div style="text-align: center; padding-top: 20px; border-top: 2px solid #ddd;">
+        <p style="color: red; font-size: 14px; font-weight: bold;">
+          This ticket is valid for ONE DAY only and is NON-TRANSFERABLE.
+        </p>
+        <p style="font-size: 12px; color: #555;">
+          For support, contact Barterverse:
+        </p>
+        <p style="font-size: 12px; color: #555;">
+          tyabolaji@gmail.com | +2348069213941
+        </p>
+      </div>
+    </div>
+  `;
 }
 
 exports.handler = async (event) => {
@@ -58,13 +56,13 @@ exports.handler = async (event) => {
     const code = generateCode();
     const ticketData = { name, email, phone, address, interests, hobby, gamer, gameType, code };
 
-    // Generate QR
+    // Generate QR code as a base64 data URL
     const qrDataUrl = await QRCode.toDataURL(JSON.stringify(ticketData));
 
-    // Generate image buffer instead of PDF
-    const imageBuffer = await generateTicketImage(ticketData, qrDataUrl);
+    // Generate HTML for the ticket
+    const htmlContent = generateTicketHtml(ticketData, qrDataUrl);
 
-    // Email
+    // Email configuration
     const transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
       port: parseInt(process.env.MAIL_PORT),
@@ -72,15 +70,12 @@ exports.handler = async (event) => {
       auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
     });
 
+    // Send the email with the HTML content
     await transporter.sendMail({
       from: process.env.MAIL_FROM,
       to: email,
       subject: "Your Barterverse Gaming Meetup Ticket",
-      html: `<h2>Welcome, ${name}!</h2>
-        <p>Registration successful! Here is your ticket:</p>
-        <p><b>Ticket Code:</b> ${code}</p>
-        <p>Your ticket is attached as an image.</p>`,
-      attachments: [{ filename: `Gaming_Ticket_${code}.jpeg`, content: imageBuffer }], // <-- Change filename and content
+      html: htmlContent, // Send the HTML string as the body
     });
 
     return { statusCode: 200, body: JSON.stringify({ message: "Registration successful!", code }) };
