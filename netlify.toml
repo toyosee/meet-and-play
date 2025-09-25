@@ -6,7 +6,7 @@
 
 # Enable Netlify Functions
 [functions]
-  directory = "/netlify/functions"
+  directory = "netlify/functions"
   node_bundler = "esbuild"
   [functions.esbuild]
     loader = { ".js" = "jsx" }
