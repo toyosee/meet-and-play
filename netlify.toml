@@ -1,7 +1,7 @@
 [build]
   # Install the function's dependencies first, then build the frontend.
   # base = "frontend"
-  command = "npm run build"
+  command = "cd frontend && npm install && npm run build"
   publish = "frontend/dist"
 
 # Enable Netlify Functions
