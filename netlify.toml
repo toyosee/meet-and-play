@@ -1,12 +1,12 @@
 [build]
   # Install the function's dependencies first, then build the frontend.
-  base = "frontend"
-  command = "npm run build"
-  publish = "dist"
+  # base = "frontend"
+  # command = "npm run build"
+  command = "npm install --prefix netlify/functions && npm run build"
+  publish = "frontend/dist"
 
 # Enable Netlify Functions
 [functions]
-  # We must go up one level ('../') to find the 'netlify' folder.
   directory = "netlify/functions"
   node_bundler = "esbuild"
   [functions.esbuild]
