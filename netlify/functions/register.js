@@ -39,7 +39,7 @@ function generateTicketHtml(ticketData, qrDataUrl) {
           For support, contact Barterverse:
         </p>
         <p style="font-size: 12px; color: #555;">
-          tyabolaji@gmail.com | +2348069213941
+          ${process.env.MAIL_USER} | +2348069213941
         </p>
       </div>
     </div>
