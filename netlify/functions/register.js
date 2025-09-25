@@ -9,10 +9,10 @@ function generateCode() {
 /**
  * Generates an HTML string for the ticket.
  * @param {object} ticketData - The user and ticket information.
- * @param {string} qrDataUrl - The base64 data URL of the QR code image.
  * @returns {string} The complete HTML string for the email body.
  */
-function generateTicketHtml(ticketData, qrDataUrl) {
+function generateTicketHtml(ticketData) {
+  // We're no longer passing the QR data URL, as it will be attached and referenced by a cid.
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
       <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #ddd;">
@@ -28,7 +28,8 @@ function generateTicketHtml(ticketData, qrDataUrl) {
 
       <div style="text-align: center; padding: 20px;">
         <p style="font-weight: bold;">Present this code for entry:</p>
-        <img src="${qrDataUrl}" alt="QR Code" style="width: 200px; height: 200px; border: 2px solid #000;"/>
+        <!-- The image source now references the attachment by its Content-ID (cid) -->
+        <img src="cid:qrcode_image" alt="QR Code" style="width: 200px; height: 200px; border: 2px solid #000;"/>
       </div>
 
       <div style="text-align: center; padding-top: 20px; border-top: 2px solid #ddd;">
@@ -56,11 +57,11 @@ exports.handler = async (event) => {
     const code = generateCode();
     const ticketData = { name, email, phone, address, interests, hobby, gamer, gameType, code };
 
-    // Generate QR code as a base64 data URL
-    const qrDataUrl = await QRCode.toDataURL(JSON.stringify(ticketData));
+    // Generate QR code as a buffer for attachment
+    const qrImageBuffer = await QRCode.toBuffer(JSON.stringify(ticketData));
 
-    // Generate HTML for the ticket
-    const htmlContent = generateTicketHtml(ticketData, qrDataUrl);
+    // Generate HTML for the ticket. No need to pass the QR data URL anymore.
+    const htmlContent = generateTicketHtml(ticketData);
 
     // Email configuration
     const transporter = nodemailer.createTransport({
@@ -70,12 +71,17 @@ exports.handler = async (event) => {
       auth: { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS },
     });
 
-    // Send the email with the HTML content
+    // Send the email with the HTML content and the QR code as an attachment
     await transporter.sendMail({
       from: process.env.MAIL_FROM,
       to: email,
       subject: "Your Barterverse Gaming Meetup Ticket",
-      html: htmlContent, // Send the HTML string as the body
+      html: htmlContent,
+      attachments: [{
+        filename: 'qrcode.png', // The name of the attachment file
+        content: qrImageBuffer, // The image data as a buffer
+        cid: 'qrcode_image' // The Content-ID to reference in the HTML
+      }]
     });
 
     return { statusCode: 200, body: JSON.stringify({ message: "Registration successful!", code }) };
