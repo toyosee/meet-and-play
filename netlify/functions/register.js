@@ -7,7 +7,7 @@ function generateCode() {
 }
 
 /**
- * Generates an HTML string for the ticket (sent to user).
+ * Generates HTML string for the user's ticket.
  */
 function generateTicketHtml(ticketData) {
   return `
@@ -44,7 +44,7 @@ function generateTicketHtml(ticketData) {
 }
 
 /**
- * Generates an HTML string for the admin notification.
+ * Generates an HTML string for the admin notification with ALL registrant fields.
  */
 function generateAdminHtml(ticketData) {
   return `
@@ -53,8 +53,12 @@ function generateAdminHtml(ticketData) {
       <p><strong>Name:</strong> ${ticketData.name}</p>
       <p><strong>Email:</strong> ${ticketData.email}</p>
       <p><strong>Phone:</strong> ${ticketData.phone || "N/A"}</p>
+      <p><strong>Address:</strong> ${ticketData.address || "N/A"}</p>
       <p><strong>Game Type:</strong> ${ticketData.gameType}</p>
       <p><strong>Attendance Code:</strong> ${ticketData.code}</p>
+      <p><strong>Interests:</strong> ${ticketData.interests || "N/A"}</p>
+      <p><strong>Hobby:</strong> ${ticketData.hobby || "N/A"}</p>
+      <p><strong>Gamer Type:</strong> ${ticketData.gamer || "N/A"}</p>
       <hr/>
       <p style="font-size: 12px; color: #555;">
         This is an automated notification to <b>${process.env.MAIL_USER}</b>.
@@ -100,7 +104,7 @@ exports.handler = async (event) => {
       }]
     });
 
-    // 2️⃣ Send notification to admin
+    // 2️⃣ Send notification to admin with ALL details
     await transporter.sendMail({
       from: process.env.MAIL_FROM,
       to: process.env.MAIL_USER,
