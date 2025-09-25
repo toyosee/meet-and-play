@@ -41,7 +41,7 @@ function generateTicketPDF(ticketData, qrDataUrl) {
 
     doc.fillColor("black")
       .text("For support, contact Barterverse:", { align: "center" });
-    doc.text("tyabolaji@gmail.com | +2348069213941", { align: "center" });
+    doc.text(`${process.env.MAIL_USER} | +2348069213941`, { align: "center" });
 
     doc.end();
   });
@@ -95,7 +95,7 @@ exports.handler = async (event) => {
         <p style="color:red"><b>⚠️ Note:</b> This ticket is valid for <u>ONE DAY only</u> and is <u>NON-TRANSFERABLE</u>.</p>
         <hr/>
         <p>For support, contact Barterverse:</p>
-        <p>📧 tyabolaji@gmail.com<br/>☎️ +2348069213941</p>
+        <p>📧 ${process.env.MAIL_USER}<br/>☎️ +2348069213941</p>
       `,
       attachments: [
         {
